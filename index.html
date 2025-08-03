@@ -1,407 +1,443 @@
-<!DOCTYPE html> <html> <head> <title>Dungeons and Daisies Runner</title> <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script> <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"></script> <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet"> <style> html, body { margin: 0; padding: 0; width: 100%; height: 100vh; overflow: hidden; background-color: #000; } canvas { display: block; border: 2px solid #fff; } </style> </head> <body> <script> let player; let obstacles = []; let daisies = []; let score = 0; let gameOver = false; let groundY; let baseSpeed = -6; // Starting speed
-// Sprite variables for running animation and other elements
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dungeons and Daisies Runner</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #000;
+    }
+    canvas {
+      display: block;
+      border: 2px solid #fff;
+    }
+  </style>
+</head>
+<body>
+<script>
+let player;
+let obstacles = [];
+let daisies = [];
+let score = 0;
+let gameOver = false;
+let groundY;
+let baseSpeed = -6;
 let playerRunSprites = [];
 let currentFrame = 0;
-let frameDelay = 5; // Faster animation
+let frameDelay = 5;
 let boneSprite;
 let daisySprite;
 let backgroundImg;
-let midgroundImg; // New midground layer
-let backgroundX = 0; // For parallax scrolling of the background
-let midgroundX = 0; // For parallax scrolling of the midground
-
-// Sound variables
+let midgroundImg;
+let titleImg;
+let backgroundX = 0;
+let midgroundX = 0;
 let jumpSound;
 let collectSound;
 let gameOverSound;
 let themeMusic;
-
-// Scaling variables for mobile
 let scaleFactor = 1;
 let originalWidth = 800;
 let originalHeight = 400;
 let restartButton = null;
+let gameState = "title";
+let titleStartTime;
 
 function preload() {
-try {
-playerRunSprites[0] = loadImage('https://raw.githubusercontent.com/pushybrand/dungeons-and-daisies-sprites/main/player_run1.png.PNG',
-() => console.log('Player run sprite 1 loaded'),
-() => console.error('Failed to load player run sprite 1')
-);
-playerRunSprites[1] = loadImage('https://raw.githubusercontent.com/pushybrand/dungeons-and-daisies-sprites/main/player_run2.png.PNG',
-() => console.log('Player run sprite 2 loaded'),
-() => console.error('Failed to load player run sprite 2')
-);
-boneSprite = loadImage('https://raw.githubusercontent.com/pushybrand/dungeons-and-daisies-sprites/main/skull.PNG',
-() => console.log('Bone sprite loaded'),
-() => console.error('Failed to load bone sprite')
-);
-daisySprite = loadImage('https://raw.githubusercontent.com/pushybrand/dungeons-and-daisies-sprites/main/daisy.PNG',
-() => console.log('Daisy sprite loaded'),
-() => console.error('Failed to load daisy sprite')
-);
-backgroundImg = loadImage('https://raw.githubusercontent.com/pushybrand/dungeons-and-daisies-sprites/main/add-skull-and-axe-on-the-wall.png',
-() => console.log('Background loaded'),
-() => console.error('Failed to load background')
-);
-midgroundImg = loadImage('https://raw.githubusercontent.com/pushybrand/dungeons-and-daisies-sprites/main/midground_chains.png',
-() => console.log('Midground loaded'),
-() => console.error('Failed to load midground')
-);
-jumpSound = loadSound('https://raw.githubusercontent.com/pushybrand/dungeons-and-daisies-sprites/main/ES_Retro%2C%208%20Bit%2C%20Jump%2001%20-%20Epidemic%20Sound.mp3',
-() => console.log('Jump sound loaded'),
-() => console.error('Failed to load jump sound')
-);
-collectSound = loadSound('https://raw.githubusercontent.com/pushybrand/dungeons-and-daisies-sprites/main/ES_Notification%2C%20Video%20Game%2C%20Collect%20Item%2C%20Select%2001%20-%20Epidemic%20Sound.mp3',
-() => console.log('Collect sound loaded'),
-() => console.error('Failed to load collect sound')
-);
-gameOverSound = loadSound('https://raw.githubusercontent.com/pushybrand/dungeons-and-daisies-sprites/main/ES_Synthesized%2C%208bit%2C%20Video%20Game%2C%20game%20over%20-%20Epidemic%20Sound.mp3',
-() => console.log('Game over sound loaded'),
-() => console.error('Failed to load game over sound')
-);
-themeMusic = loadSound('https://raw.githubusercontent.com/pushybrand/dungeons-and-daisies-sprites/main/Deadhedz%20game%20tune.wav',
-() => console.log('Theme music loaded'),
-() => console.error('Failed to load theme music')
-);
-} catch (e) {
-console.error('Error in preload:', e);
-}
+  try {
+    playerRunSprites[0] = loadImage('https://raw.githubusercontent.com/pushybrand/dungeons-and-daisies-sprites/main/player_run1.png',
+      () => console.log('Player run sprite 1 loaded'),
+      () => console.error('Failed to load player run sprite 1')
+    );
+    playerRunSprites[1] = loadImage('https://raw.githubusercontent.com/pushybrand/dungeons-and-daisies-sprites/main/player_run2.png',
+      () => console.log('Player run sprite 2 loaded'),
+      () => console.error('Failed to load player run sprite 2')
+    );
+    boneSprite = loadImage('https://raw.githubusercontent.com/pushybrand/dungeons-and-daisies-sprites/main/skull.PNG',
+      () => console.log('Bone sprite loaded'),
+      () => console.error('Failed to load bone sprite')
+    );
+    daisySprite = loadImage('https://raw.githubusercontent.com/pushybrand/dungeons-and-daisies-sprites/main/daisy.PNG',
+      () => console.log('Daisy sprite loaded'),
+      () => console.error('Failed to load daisy sprite')
+    );
+    backgroundImg = loadImage('https://raw.githubusercontent.com/pushybrand/dungeons-and-daisies-sprites/main/add-skull-and-axe-on-the-wall.png',
+      () => console.log('Background loaded'),
+      () => console.error('Failed to load background')
+    );
+    midgroundImg = loadImage('https://raw.githubusercontent.com/pushybrand/dungeons-and-daisies-sprites/main/midground_chains.png',
+      () => console.log('Midground loaded'),
+      () => console.error('Failed to load midground')
+    );
+    titleImg = loadImage('https://raw.githubusercontent.com/pushybrand/dungeons-and-daisies-sprites/main/Dungeons_Daisies_title.png',
+      () => console.log('Title image loaded'),
+      () => console.error('Failed to load title image')
+    );
+    jumpSound = loadSound('https://cdn.pixabay.com/audio/2024/02/12/audio_1e1e2e.mp3');
+    collectSound = loadSound('https://cdn.pixabay.com/audio/2023/11/07/audio_13b7b3.mp3');
+    gameOverSound = loadSound('https://cdn.pixabay.com/audio/2022/10/16/audio_12b6b7.mp3');
+    themeMusic = loadSound('https://raw.githubusercontent.com/pushybrand/dungeons-and-daisies/main/ES_Dizzy_Dazzle.mp3');
+  } catch (e) {
+    console.error('Preload error:', e);
+  }
 }
 
 function setup() {
-// Responsive canvas size
-let canvasWidth = min(windowWidth, windowHeight * 2); // Maintain 2:1 aspect ratio
-let canvasHeight = canvasWidth / 2;
-scaleFactor = canvasWidth / originalWidth;
-createCanvas(canvasWidth, canvasHeight);
-
-groundY = height - 20 * scaleFactor; // Scale groundY
-player = new Player();
-textFont('VT323');
-
-if (jumpSound) jumpSound.setVolume(0.5);
-if (themeMusic) themeMusic.loop();
+  let canvasWidth = min(windowWidth, windowHeight * 2);
+  let canvasHeight = canvasWidth / 2;
+  scaleFactor = canvasWidth / originalWidth;
+  createCanvas(canvasWidth, canvasHeight);
+  groundY = height - 20 * scaleFactor;
+  player = new Player();
+  textFont('VT323');
+  if (jumpSound) jumpSound.setVolume(0.5);
+  if (themeMusic) themeMusic.setVolume(0.5);
+  titleStartTime = millis();
 }
 
 function windowResized() {
-let canvasWidth = min(windowWidth, windowHeight * 2);
-let canvasHeight = canvasWidth / 2;
-scaleFactor = canvasWidth / originalWidth;
-resizeCanvas(canvasWidth, canvasHeight);
-groundY = height - 20 * scaleFactor;
-player.adjustPosition();
+  let canvasWidth = min(windowWidth, windowHeight * 2);
+  let canvasHeight = canvasWidth / 2;
+  scaleFactor = canvasWidth / originalWidth;
+  resizeCanvas(canvasWidth, canvasHeight);
+  groundY = height - 20 * scaleFactor;
+  if (player && player.adjustPosition) player.adjustPosition();
 }
 
 function draw() {
-if (!gameOver) {
-backgroundX += baseSpeed * 0.3 * scaleFactor;
-midgroundX += baseSpeed * 0.6 * scaleFactor;
-if (backgroundX <= -width) {
-backgroundX += width;
-}
-if (midgroundX <= -width) {
-midgroundX += width;
-}
-} else {
-if (themeMusic && themeMusic.isPlaying()) {
-themeMusic.stop();
-}
+  if (gameState === "title") {
+    drawTitleScreen();
+    return;
+  }
+
+  if (!gameOver) {
+    backgroundX += baseSpeed * 0.3 * scaleFactor;
+    midgroundX += baseSpeed * 0.6 * scaleFactor;
+    if (backgroundX <= -width) backgroundX += width;
+    if (midgroundX <= -width) midgroundX += width;
+  } else {
+    if (themeMusic && themeMusic.isPlaying()) themeMusic.stop();
+  }
+
+  if (backgroundImg) {
+    image(backgroundImg, backgroundX, 0, width, height);
+    image(backgroundImg, backgroundX + width, 0, width, height);
+  } else {
+    background(50, 100, 200);
+  }
+
+  if (midgroundImg) {
+    image(midgroundImg, midgroundX, 0, width, height);
+    image(midgroundImg, midgroundX + width, 0, width, height);
+  }
+
+  if (!gameOver) {
+    if (frameCount % 300 === 0) {
+      baseSpeed -= 0.5;
+      if (baseSpeed < -12) baseSpeed = -12;
+    }
+    if (frameCount % 60 === 0) {
+      if (random(1) < 0.7) obstacles.push(new Obstacle());
+    }
+    if (frameCount % 60 === 30) {
+      if (random(1) < 0.4) daisies.push(new Daisy());
+    }
+
+    player.update();
+    player.show();
+
+    for (let i = obstacles.length - 1; i >= 0; i--) {
+      obstacles[i].update();
+      obstacles[i].show();
+      if (obstacles[i].hits(player)) {
+        gameOver = true;
+        if (gameOverSound) gameOverSound.play();
+        continue;
+      }
+      if (obstacles[i].offscreen()) obstacles.splice(i, 1);
+    }
+
+    for (let i = daisies.length - 1; i >= 0; i--) {
+      daisies[i].update();
+      daisies[i].show();
+      if (daisies[i].hits(player)) {
+        score += 10;
+        if (collectSound) collectSound.play();
+        daisies.splice(i, 1);
+        continue;
+      }
+      if (daisies[i].offscreen()) daisies.splice(i, 1);
+    }
+
+    textAlign(RIGHT);
+    textSize(30 * scaleFactor);
+    fill(0);
+    noStroke();
+    text("Score: " + score, width - 20 * scaleFactor, 40 * scaleFactor);
+    fill('#32CD32');
+    text("Score: " + score, width - 22 * scaleFactor, 38 * scaleFactor);
+    textAlign(LEFT);
+
+    if (frameCount % frameDelay === 0) {
+      currentFrame = (currentFrame + 1) % playerRunSprites.length;
+    }
+  } else {
+    textAlign(CENTER, CENTER);
+    textSize(60 * scaleFactor);
+    fill(0);
+    text("Game Over!", width / 2 + 2 * scaleFactor, height / 2 - 20 * scaleFactor);
+    fill('#32CD32');
+    text("Game Over!", width / 2, height / 2 - 22 * scaleFactor);
+
+    textSize(30 * scaleFactor);
+    fill(0);
+    text("Score: " + score, width / 2 + 2 * scaleFactor, height / 2 + 20 * scaleFactor);
+    fill('#32CD32');
+    text("Score: " + score, width / 2, height / 2 + 18 * scaleFactor);
+
+    // Restart button for mobile
+    fill(0);
+    rect(width / 2 - 100 * scaleFactor, height / 2 + 40 * scaleFactor, 200 * scaleFactor, 40 * scaleFactor);
+    fill('#32CD32');
+    textSize(24 * scaleFactor);
+    text("Restart", width / 2 + 2 * scaleFactor, height / 2 + 62 * scaleFactor);
+    fill(0);
+    text("Restart", width / 2, height / 2 + 60 * scaleFactor);
+
+    // Store restart button bounds for touch detection
+    restartButton = {
+      x: width / 2 - 100 * scaleFactor,
+      y: height / 2 + 40 * scaleFactor,
+      w: 200 * scaleFactor,
+      h: 40 * scaleFactor
+    };
+  }
 }
 
-if (backgroundImg) {
-image(backgroundImg, backgroundX, 0, width, height);
-image(backgroundImg, backgroundX + width, 0, width, height);
-} else {
-for (let y = 0; y < height; y++) {
-let c = map(y, 0, height, 50, 0);
-stroke(c);
-line(0, y, width, y);
-}
-fill(50);
-stroke(0);
-strokeWeight(1 * scaleFactor);
-for (let x = 0; x < width; x += 20 * scaleFactor) {
-rect(x, groundY - 20 * scaleFactor, 20 * scaleFactor, 20 * scaleFactor);
-line(x, groundY, x + 20 * scaleFactor, groundY - 20 * scaleFactor);
-}
-}
+function drawTitleScreen() {
+  background(0);
+  if (titleImg) {
+    image(titleImg, width / 2 - (width * 0.6) / 2, height * 0.1, width * 0.6, height * 0.5);
+  }
+  textAlign(CENTER, CENTER);
+  fill('#32CD32');
+  textSize(48 * scaleFactor);
+  text("Dungeons & Daisies", width / 2, height * 0.7);
+  textSize(24 * scaleFactor);
+  fill(255);
+  text("Press SPACE or TAP to Start", width / 2, height * 0.8);
 
-if (midgroundImg) {
-image(midgroundImg, midgroundX, 0, width, height);
-image(midgroundImg, midgroundX + width, 0, width, height);
-}
-
-if (!gameOver) {
-if (frameCount % 300 === 0) {
-baseSpeed -= 0.5;
-if (baseSpeed < -12) {
-baseSpeed = -12;
-}
-}
-
-if (frameCount % 60 === 0) {
-if (random(1) < 0.7) {
-obstacles.push(new Obstacle());
-}
-}
-if (frameCount % 60 === 30) {
-if (random(1) < 0.4) {
-daisies.push(new Daisy());
-}
-}
-
-player.update();
-player.show();
-
-for (let i = obstacles.length - 1; i >= 0; i--) {
-obstacles[i].update();
-obstacles[i].show();
-if (obstacles[i].hits(player)) {
-gameOver = true;
-if (gameOverSound) gameOverSound.play();
-continue;
-}
-if (obstacles[i].offscreen()) {
-obstacles.splice(i, 1);
-}
-}
-
-for (let i = daisies.length - 1; i >= 0; i--) {
-daisies[i].update();
-daisies[i].show();
-if (daisies[i].hits(player)) {
-score += 10;
-if (collectSound) collectSound.play();
-daisies.splice(i, 1);
-continue;
-}
-if (daisies[i].offscreen()) {
-daisies.splice(i, 1);
-}
-}
-
-textAlign(RIGHT);
-textSize(30 * scaleFactor);
-fill(0);
-noStroke();
-text("Score: " + score, width - 20 * scaleFactor, 40 * scaleFactor);
-fill('#32CD32');
-text("Score: " + score, width - 22 * scaleFactor, 38 * scaleFactor);
-textAlign(LEFT);
-
-if (frameCount % frameDelay === 0) {
-currentFrame = (currentFrame + 1) % playerRunSprites.length;
-}
-} else {
-textAlign(CENTER, CENTER);
-
-textSize(60 * scaleFactor);
-fill(0);
-text("Game Over!", width / 2 + 2 * scaleFactor, height / 2 - 20 * scaleFactor);
-fill('#32CD32');
-text("Game Over!", width / 2, height / 2 - 22 * scaleFactor);
-
-textSize(30 * scaleFactor);
-fill(0);
-text("Score: " + score, width / 2 + 2 * scaleFactor, height / 2 + 20 * scaleFactor);
-fill('#32CD32');
-text("Score: " + score, width / 2, height / 2 + 18 * scaleFactor);
-
-// Restart button for mobile
-fill(0);
-rect(width / 2 - 100 * scaleFactor, height / 2 + 40 * scaleFactor, 200 * scaleFactor, 40 * scaleFactor);
-fill('#32CD32');
-textSize(24 * scaleFactor);
-text("Restart", width / 2 + 2 * scaleFactor, height / 2 + 62 * scaleFactor);
-fill(0);
-text("Restart", width / 2, height / 2 + 60 * scaleFactor);
-
-// Store restart button bounds for touch detection
-restartButton = {
-x: width / 2 - 100 * scaleFactor,
-y: height / 2 + 40 * scaleFactor,
-w: 200 * scaleFactor,
-h: 40 * scaleFactor
-};
-}
+  if (millis() - titleStartTime > 500 && (keyIsPressed && key === ' ')) {
+    startGame();
+  }
 }
 
 function keyPressed() {
-if (key === ' ' && !player.isJumping) {
-player.jump();
+  if (gameState === "title" && key === ' ') {
+    startGame();
+  }
+  if (key === ' ' && !player.isJumping && !gameOver && gameState === "play") {
+    player.jump();
+  }
+  if (key === 'r' && gameOver) {
+    resetGame();
+  }
 }
-if (key === 'r' && gameOver) {
-resetGame();
-}
+
+function mousePressed() {
+  if (gameState === "title") {
+    startGame();
+  }
+  if (gameOver && restartButton) {
+    if (mouseX >= restartButton.x && mouseX <= restartButton.x + restartButton.w &&
+        mouseY >= restartButton.y && mouseY <= restartButton.y + restartButton.h) {
+      resetGame();
+    }
+  }
 }
 
 function touchStarted() {
-if (!gameOver && !player.isJumping) {
-player.jump();
+  if (gameState === "title") {
+    startGame();
+  }
+  if (!gameOver && !player.isJumping && gameState === "play") {
+    player.jump();
+  }
+  if (gameOver && restartButton) {
+    let touchX = touches[0]?.x || mouseX;
+    let touchY = touches[0]?.y || mouseY;
+    if (touchX >= restartButton.x && touchX <= restartButton.x + restartButton.w &&
+        touchY >= restartButton.y && touchY <= restartButton.y + restartButton.h) {
+      resetGame();
+    }
+  }
+  return false;
 }
-if (gameOver && restartButton) {
-let touchX = touches[0]?.x || mouseX;
-let touchY = touches[0]?.y || mouseY;
-if (touchX >= restartButton.x && touchX <= restartButton.x + restartButton.w &&
-touchY >= restartButton.y && touchY <= restartButton.y + restartButton.h) {
-resetGame();
-}
-}
-return false; // Prevent default touch behavior
+
+function startGame() {
+  gameState = "play";
+  if (themeMusic && !themeMusic.isPlaying()) themeMusic.loop();
 }
 
 class Player {
-constructor() {
-this.w = 96 * scaleFactor;
-this.h = 96 * scaleFactor;
-this.hitboxW = 64 * scaleFactor;
-this.hitboxH = 64 * scaleFactor;
-this.hitboxOffsetX = (this.w - this.hitboxW) / 2;
-this.hitboxOffsetY = (this.h - this.hitboxH) / 2;
-this.x = 100 * scaleFactor;
-this.y = groundY - this.h;
-this.vy = 0;
-this.gravity = 0.8;
-this.jumpForce = -15;
-this.isJumping = false;
-}
+  constructor() {
+    this.w = 96 * scaleFactor;
+    this.h = 96 * scaleFactor;
+    this.hitboxW = 64 * scaleFactor;
+    this.hitboxH = 64 * scaleFactor;
+    this.hitboxOffsetX = (this.w - this.hitboxW) / 2;
+    this.hitboxOffsetY = (this.h - this.hitboxH) / 2;
+    this.x = 100 * scaleFactor;
+    this.y = groundY - this.h;
+    this.vy = 0;
+    this.gravity = 0.8;
+    this.jumpForce = -15;
+    this.isJumping = false;
+  }
 
-adjustPosition() {
-this.w = 96 * scaleFactor;
-this.h = 96 * scaleFactor;
-this.hitboxW = 64 * scaleFactor;
-this.hitboxH = 64 * scaleFactor;
-this.hitboxOffsetX = (this.w - this.hitboxW) / 2;
-this.hitboxOffsetY = (this.h - this.hitboxH) / 2;
-this.x = 100 * scaleFactor;
-this.y = groundY - this.h;
-}
+  adjustPosition() {
+    this.w = 96 * scaleFactor;
+    this.h = 96 * scaleFactor;
+    this.hitboxW = 64 * scaleFactor;
+    this.hitboxH = 64 * scaleFactor;
+    this.hitboxOffsetX = (this.w - this.hitboxW) / 2;
+    this.hitboxOffsetY = (this.h - this.hitboxH) / 2;
+    this.x = 100 * scaleFactor;
+    this.y = groundY - this.h;
+  }
 
-update() {
-this.vy += this.gravity;
-this.y += this.vy;
-if (this.y > groundY - this.h) {
-this.y = groundY - this.h;
-this.vy = 0;
-this.isJumping = false;
-}
-}
+  update() {
+    this.vy += this.gravity;
+    this.y += this.vy;
+    if (this.y > groundY - this.h) {
+      this.y = groundY - this.h;
+      this.vy = 0;
+      this.isJumping = false;
+    }
+  }
 
-show() {
-if (playerRunSprites[currentFrame]) {
-image(playerRunSprites[currentFrame], this.x, this.y, this.w, this.h);
-} else {
-fill(0);
-stroke(255);
-strokeWeight(2 * scaleFactor);
-rect(this.x, this.y, this.w, this.h);
-line(this.x + this.w, this.y + this.h / 2, this.x + this.w + 10 * scaleFactor, this.y + this.h / 2 - 10 * scaleFactor);
-}
-}
+  show() {
+    if (playerRunSprites[currentFrame]) {
+      image(playerRunSprites[currentFrame], this.x, this.y, this.w, this.h);
+    } else {
+      fill(0);
+      stroke(255);
+      strokeWeight(2 * scaleFactor);
+      rect(this.x, this.y, this.w, this.h);
+      line(this.x + this.w, this.y + this.h / 2, this.x + this.w + 10 * scaleFactor, this.y + this.h / 2 - 10 * scaleFactor);
+    }
+  }
 
-jump() {
-this.vy = this.jumpForce;
-this.isJumping = true;
-if (jumpSound) jumpSound.play();
-}
+  jump() {
+    this.vy = this.jumpForce;
+    this.isJumping = true;
+    if (jumpSound) jumpSound.play();
+  }
 }
 
 class Obstacle {
-constructor() {
-this.w = 48 * scaleFactor;
-this.h = 48 * scaleFactor;
-this.hitboxW = 32 * scaleFactor;
-this.hitboxH = 32 * scaleFactor;
-this.hitboxOffsetX = (this.w - this.hitboxW) / 2;
-this.hitboxOffsetY = (this.h - this.hitboxH) / 2;
-this.x = width;
-this.y = groundY - this.h;
-this.speed = baseSpeed * scaleFactor;
-}
+  constructor() {
+    this.w = 48 * scaleFactor;
+    this.h = 48 * scaleFactor;
+    this.hitboxW = 32 * scaleFactor;
+    this.hitboxH = 32 * scaleFactor;
+    this.hitboxOffsetX = (this.w - this.hitboxW) / 2;
+    this.hitboxOffsetY = (this.h - this.hitboxH) / 2;
+    this.x = width;
+    this.y = groundY - this.h;
+    this.speed = baseSpeed * scaleFactor;
+  }
 
-update() {
-this.x += this.speed;
-}
+  update() {
+    this.x += this.speed;
+  }
 
-show() {
-if (boneSprite) {
-image(boneSprite, this.x, this.y, this.w, this.h);
-} else {
-fill(150);
-stroke(0);
-strokeWeight(2 * scaleFactor);
-rect(this.x, this.y, this.w, this.h);
-}
-}
+  show() {
+    if (boneSprite) {
+      image(boneSprite, this.x, this.y, this.w, this.h);
+    } else {
+      fill(150);
+      stroke(0);
+      strokeWeight(2 * scaleFactor);
+      rect(this.x, this.y, this.w, this.h);
+    }
+  }
 
-hits(player) {
-let playerHitboxX = player.x + player.hitboxOffsetX;
-let playerHitboxY = player.y + player.hitboxOffsetY;
-let thisHitboxX = this.x + this.hitboxOffsetX;
-let thisHitboxY = this.y + this.hitboxOffsetY;
+  hits(player) {
+    let playerHitboxX = player.x + player.hitboxOffsetX;
+    let playerHitboxY = player.y + player.hitboxOffsetY;
+    let thisHitboxX = this.x + this.hitboxOffsetX;
+    let thisHitboxY = this.y + this.hitboxOffsetY;
 
-return playerHitboxX + player.hitboxW > thisHitboxX &&
-playerHitboxX < thisHitboxX + this.hitboxW &&
-playerHitboxY + player.hitboxH > thisHitboxY &&
-playerHitboxY < thisHitboxY + this.hitboxH;
-}
+    return playerHitboxX + player.hitboxW > thisHitboxX &&
+      playerHitboxX < thisHitboxX + this.hitboxW &&
+      playerHitboxY + player.hitboxH > thisHitboxY &&
+      playerHitboxY < thisHitboxY + this.hitboxH;
+  }
 
-offscreen() {
-return this.x + this.w < 0;
-}
+  offscreen() {
+    return this.x + this.w < 0;
+  }
 }
 
 class Daisy {
-constructor() {
-this.w = 48 * scaleFactor;
-this.h = 48 * scaleFactor;
-this.x = width;
-this.y = random(150 * scaleFactor, groundY - this.h);
-this.speed = baseSpeed * scaleFactor;
-}
+  constructor() {
+    this.w = 48 * scaleFactor;
+    this.h = 48 * scaleFactor;
+    this.x = width;
+    this.y = random(150 * scaleFactor, groundY - this.h);
+    this.speed = baseSpeed * scaleFactor;
+  }
 
-update() {
-this.x += this.speed;
-}
+  update() {
+    this.x += this.speed;
+  }
 
-show() {
-if (daisySprite) {
-image(daisySprite, this.x, this.y, this.w, this.h);
-} else {
-fill(255, 255, 0);
-stroke(0);
-strokeWeight(2 * scaleFactor);
-ellipse(this.x + this.w / 2, this.y + this.h / 2, this.w, this.h);
-}
-}
+  show() {
+    if (daisySprite) {
+      image(daisySprite, this.x, this.y, this.w, this.h);
+    } else {
+      fill(255, 255, 0);
+      stroke(0);
+      strokeWeight(2 * scaleFactor);
+      ellipse(this.x + this.w / 2, this.y + this.h / 2, this.w, this.h);
+    }
+  }
 
-hits(player) {
-return player.x + player.w > this.x &&
-player.x < this.x + this.w &&
-player.y + player.h > this.y &&
-player.y < this.y + this.h;
-}
+  hits(player) {
+    return player.x + player.w > this.x &&
+      player.x < this.x + this.w &&
+      player.y + player.h > this.y &&
+      player.y < this.y + this.h;
+  }
 
-offscreen() {
-return this.x + this.w < 0;
-}
+  offscreen() {
+    return this.x + this.w < 0;
+  }
 }
 
 function resetGame() {
-player = new Player();
-obstacles = [];
-daisies = [];
-score = 0;
-gameOver = false;
-currentFrame = 0;
-baseSpeed = -6;
-backgroundX = 0;
-midgroundX = 0;
-if (themeMusic && !themeMusic.isPlaying()) {
-themeMusic.loop();
-}
+  player = new Player();
+  obstacles = [];
+  daisies = [];
+  score = 0;
+  gameOver = false;
+  currentFrame = 0;
+  baseSpeed = -6;
+  backgroundX = 0;
+  midgroundX = 0;
+  if (themeMusic && !themeMusic.isPlaying()) {
+    themeMusic.loop();
+  }
+  gameState = "play";
 }
 </script>
-
-</body> </html>
+</body>
+</html>
